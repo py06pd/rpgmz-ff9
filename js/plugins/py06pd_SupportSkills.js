@@ -73,27 +73,31 @@ py06pd.SupportSkills.vocabSupport = "Support";
         }
 
         return item && (this._actor.isEquippedSupportSkill(item.id) ||
-            (this._actor.usedSkillStones() + JSON.parse(item.note).slots <= this._actor.skillStones()));
+            this._actor.freeSkillStones() >= JSON.parse(item.note).slots);
     };
 
     py06pd.SupportSkills.Window_SkillList_drawItem = Window_SkillList.prototype.drawItem;
     Window_SkillList.prototype.drawItem = function(index) {
-        const skill = this.itemAt(index);
-        if (skill) {
-            const costWidth = this.costWidth();
-            const rect = this.itemLineRect(index);
-            this.changePaintOpacity(this.isEnabled(skill));
-            const width = rect.width - costWidth;
-            const iconY = rect.y + (this.lineHeight() - ImageManager.iconHeight) / 2;
-            const textMargin = ImageManager.standardIconWidth + 4;
-            const itemWidth = Math.max(0, width - textMargin);
-            const iconIndex = this._actor.isEquippedSupportSkill(skill.id) ?
-                py06pd.SupportSkills.iconAssigned : py06pd.SupportSkills.iconUnassigned;
-            this.resetTextColor();
-            this.drawIcon(iconIndex, rect.x, iconY);
-            this.drawText(skill.name, rect.x + textMargin, rect.y, itemWidth);
-            this.drawText(JSON.parse(skill.note).slots, rect.x, rect.y, rect.width, "right");
-            this.changePaintOpacity(1);
+        if (this._stypeId > 0) {
+            py06pd.SupportSkills.Window_SkillList_drawItem.call(this, index);
+        } else {
+            const skill = this.itemAt(index);
+            if (skill) {
+                const costWidth = this.costWidth();
+                const rect = this.itemLineRect(index);
+                this.changePaintOpacity(this.isEnabled(skill));
+                const width = rect.width - costWidth;
+                const iconY = rect.y + (this.lineHeight() - ImageManager.iconHeight) / 2;
+                const textMargin = ImageManager.standardIconWidth + 4;
+                const itemWidth = Math.max(0, width - textMargin);
+                const iconIndex = this._actor.isEquippedSupportSkill(skill.id) ?
+                    py06pd.SupportSkills.iconAssigned : py06pd.SupportSkills.iconUnassigned;
+                this.resetTextColor();
+                this.drawIcon(iconIndex, rect.x, iconY);
+                this.drawText(skill.name, rect.x + textMargin, rect.y, itemWidth);
+                this.drawText(JSON.parse(skill.note).slots, rect.x, rect.y, rect.width, "right");
+                this.changePaintOpacity(1);
+            }
         }
     };
 
@@ -116,7 +120,7 @@ py06pd.SupportSkills.vocabSupport = "Support";
         this.placeBasicGauges(actor, x2, y);
         const iconY = y + lineHeight * 2 + (this.lineHeight() - ImageManager.iconHeight) / 2;
         this.drawIcon(py06pd.SupportSkills.iconAssigned, x2, iconY);
-        const stonesText = actor.usedSkillStones() + "/" + actor.skillStones();
+        const stonesText = actor.freeSkillStones() + "/" + actor.skillStones();
         this.drawText(stonesText, x2 + ImageManager.iconWidth + 8, y + lineHeight * 2);
     };
 
@@ -136,6 +140,11 @@ py06pd.SupportSkills.vocabSupport = "Support";
 
 Game_Actor.prototype.equipSupportSkill = function(skillId) {
     this._equippedSupportSkills.push(skillId);
+};
+
+Game_Actor.prototype.freeSkillStones = function() {
+    return this.skillStones() -
+        this._equippedSupportSkills.reduce((prev, curr) => prev + JSON.parse($dataStates[curr].note).slots, 0);
 };
 
 Game_Actor.prototype.learnSupportSkill = function(skillId) {
@@ -163,8 +172,4 @@ Game_Actor.prototype.supportSkills = function() {
 
 Game_Actor.prototype.unequipSupportSkill = function(skillId) {
     this._equippedSupportSkills.splice(this._equippedSupportSkills.indexOf(skillId), 1);
-};
-
-Game_Actor.prototype.usedSkillStones = function() {
-    return this._equippedSupportSkills.reduce((prev, curr) => prev + JSON.parse($dataStates[curr].note).slots, 0);
 };
