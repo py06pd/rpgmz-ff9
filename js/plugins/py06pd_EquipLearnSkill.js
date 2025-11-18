@@ -60,15 +60,6 @@ py06pd.EquipLearnSkill.vocabMagicEvasion = "Magic Eva";
         py06pd.EquipLearnSkill.Game_Actor_changeEquip.call(this, slotId, item);
     };
 
-    py06pd.EquipLearnSkill.Game_Actor_paramPlus = Game_Actor.prototype.paramPlus;
-    Game_Actor.prototype.paramPlus = function(paramId) {
-        if (paramId === 2) {
-            return Game_Battler.prototype.paramPlus.call(this, paramId);
-        }
-
-        return py06pd.EquipLearnSkill.Game_Actor_paramPlus.call(this, paramId);
-    };
-
     py06pd.EquipLearnSkill.Game_Actor_skills = Game_Actor.prototype.skills;
     Game_Actor.prototype.skills = function() {
         const skills = py06pd.EquipLearnSkill.Game_Actor_skills.call(this);
@@ -178,20 +169,22 @@ py06pd.EquipLearnSkill.vocabMagicEvasion = "Magic Eva";
         this.drawItem(x, this.paramY(2), 4);
         this.drawItem(x, this.paramY(3), 7);
 
-        const y = this.paramY(4.5);
-        const width = this.paramX() - this.itemPadding() * 2;
-        this.changeTextColor(ColorManager.systemColor());
-        this.drawText(py06pd.EquipLearnSkill.vocabAttack, x, y, width);
-        if (this._actor) {
-            this.resetTextColor();
-            this.drawText(this._actor.attack(), this.paramX(), y, this.paramWidth(), "right");
-        }
-        if (this._tempActor) {
-            this.drawRightArrow(this.paramX() + this.paramWidth(), y);
-            const newValue = this._tempActor.attack();
-            const diffvalue = newValue - this._actor.attack();
-            this.changeTextColor(ColorManager.paramchangeTextColor(diffvalue));
-            this.drawText(newValue, this.paramX() + this.paramWidth() + this.rightArrowWidth(), y, this.paramWidth(), "right");
+        if (py06pd.FF9BattleMechanics) {
+            const y = this.paramY(4.5);
+            const width = this.paramX() - this.itemPadding() * 2;
+            this.changeTextColor(ColorManager.systemColor());
+            this.drawText(py06pd.EquipLearnSkill.vocabAttack, x, y, width);
+            if (this._actor) {
+                this.resetTextColor();
+                this.drawText(this._actor.weaponAttack(), this.paramX(), y, this.paramWidth(), "right");
+            }
+            if (this._tempActor) {
+                this.drawRightArrow(this.paramX() + this.paramWidth(), y);
+                const newValue = this._tempActor.weaponAttack();
+                const diffvalue = newValue - this._actor.weaponAttack();
+                this.changeTextColor(ColorManager.paramchangeTextColor(diffvalue));
+                this.drawText(newValue, this.paramX() + this.paramWidth() + this.rightArrowWidth(), y, this.paramWidth(), "right");
+            }
         }
 
         this.drawItem(x, this.paramY(5.5), 3);
@@ -249,17 +242,6 @@ BattleManager.gainAp = function() {
 // Game_Actor
 //=============================================================================
 
-Game_Actor.prototype.attack = function() {
-    let value = 0;
-    for (const item of this.weapons()) {
-        if (item) {
-            value += item.params[2];
-        }
-    }
-
-    return value;
-};
-
 Game_Actor.prototype.canLearn = function(item) {
     if (DataManager.isSkill(item)) {
         return this.skillTypes().includes(item.stypeId);
@@ -277,7 +259,7 @@ Game_Actor.prototype.gainAp = function(ap) {
            }
            let current = this._learningSkills.find(skill => skill.type === item.type && skill.id === item.item.id);
            if (!current) {
-               current = { type, id: item.item.id, value: 0 };
+               current = { type: item.type, id: item.item.id, value: 0 };
                this._learningSkills.push(current);
            }
            current.value = Math.min(current.value + ap, maxAp);
