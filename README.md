@@ -9,6 +9,12 @@ treating/testing them as discrete plugins.
 
 The order I have tested them in is:
 
+py06pd_SupportSkills
+py06pd_EquipLearnSkill
+py06pd_FF9BattleMechanics
+py06pd_FF9Steal
+py06pd_FF9Formation
+
 ## Progress
 
  * Actor data
@@ -18,19 +24,19 @@ The order I have tested them in is:
  * Skill data
  * Status data incl. support skills
  * Weapon data
+ * FF9 attack strength
+ * Battle front/back row
+ * Equip support abilities
+ * Learn skills from gear
+ * Steal command
 
 ## Todo (not comprehensive)
 
  * Support abilities
- * Equip support abilities
- * Learn skills from gear
  * FF9 battle speed
- * FF9 attack strength
  * Limit - FF7 or FF10 style limit breaks/overdrive rather than ff9 trance
  * Card game - FF8 Triple Triad; not Tetra Master
- * Steal
  * ? and ! interaction prompts
- * Battle front/back row
  * Fix status data effects
  * Add status descriptions
  * Fix skill effects

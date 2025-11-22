@@ -151,22 +151,16 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
 // Window_ActorCommand
 //=============================================================================
 
-    py06pd.FF9Steal.Window_ActorCommand_makeCommandList = Window_ActorCommand.prototype.makeCommandList;
-    Window_ActorCommand.prototype.makeCommandList = function() {
-        if (this._actor) {
-            this.addAttackCommand();
-
-            const shortcut = this._actor.addedSkillTypes().find(stypeId =>
-                $dataSkills.filter(skill => skill && skill.stypeId === stypeId).length === 1);
-            if (shortcut) {
-                const skill = $dataSkills.find(skill => skill && skill.stypeId === shortcut);
-                this.addCommand(skill.name, "shortcut", true, skill.id);
-            }
-
-            this.addSkillCommands();
-            this.addGuardCommand();
-            this.addItemCommand();
+    py06pd.FF9Steal.Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
+    Window_ActorCommand.prototype.addSkillCommands = function() {
+        const shortcut = this._actor.addedSkillTypes().find(stypeId =>
+            $dataSkills.filter(skill => skill && skill.stypeId === stypeId).length === 1);
+        if (shortcut) {
+            const skill = $dataSkills.find(skill => skill && skill.stypeId === shortcut);
+            this.addCommand(skill.name, "shortcut", true, skill.id);
         }
+
+        py06pd.FF9Steal.Window_ActorCommand_addSkillCommands.call(this);
     };
 
 //=============================================================================
