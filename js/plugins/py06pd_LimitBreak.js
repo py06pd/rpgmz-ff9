@@ -13,9 +13,32 @@
 
 var py06pd = py06pd || {};
 py06pd.LimitBreak = py06pd.LimitBreak || {};
-py06pd.LimitBreak.skillTypes = [18, null, null, null, null, null, null, null, null];
+py06pd.LimitBreak.skillTypes = [18, null, null, null, null, null, 19, null, null];
+py06pd.LimitBreak.hideSkillTypes = [null, null, null, null, null, null, 16, null, null];
 
 (function() {
+
+//=============================================================================
+// DataManager
+//=============================================================================
+
+    py06pd.LimitBreak.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function() {
+        if (!py06pd.LimitBreak.DataManager_isDatabaseLoaded.call(this)) {
+            return false;
+        }
+        if (!py06pd.LimitBreak.DatabaseLoaded) {
+            $dataSkills.forEach(item => {
+                if (item) {
+                    item.linkedSkill = py06pd.Utils.ReadJsonNote(item, 'linkedSkill', null);
+                }
+            });
+
+            py06pd.LimitBreak.DatabaseLoaded = true;
+        }
+
+        return true;
+    };
 
 //=============================================================================
 // Game_Action
@@ -44,18 +67,11 @@ py06pd.LimitBreak.skillTypes = [18, null, null, null, null, null, null, null, nu
     Game_Actor.prototype.skills = function() {
         const skills = py06pd.LimitBreak.Game_Actor_skills.call(this);
         skills.forEach(skill => {
-            const linked = JSON.parse(skill.note).linkedSkill;
-            if (linked) {
-                skills.push($dataSkills.find(s => s && s.name === linked));
+            if (skill.linkedSkill) {
+                skills.push($dataSkills.find(s => s && s.name === skill.linkedSkill));
             }
         });
         return skills;
-    };
-
-    py06pd.LimitBreak.Game_Actor_skillTypes = Game_Actor.prototype.skillTypes;
-    Game_Actor.prototype.skillTypes = function() {
-        return py06pd.LimitBreak.Game_Actor_skillTypes.call(this).filter(stypeId =>
-            !py06pd.LimitBreak.skillTypes.includes(stypeId));
     };
 
 //=============================================================================
@@ -67,22 +83,15 @@ py06pd.LimitBreak.skillTypes = [18, null, null, null, null, null, null, null, nu
         return 256;
     };
 
-//=============================================================================
-// Window_ActorCommand
-//=============================================================================
-
-    py06pd.LimitBreak.Window_ActorCommand_addSkillCommands = Window_ActorCommand.prototype.addSkillCommands;
-    Window_ActorCommand.prototype.addSkillCommands = function() {
-        if (this._actor.tp === this._actor.maxTp()) {
-            const limit = this._actor.addedSkillTypes().find(stypeId =>
-                py06pd.LimitBreak.skillTypes.includes(stypeId));
-            if (limit) {
-                const name = $dataSystem.skillTypes[limit];
-                this.addCommand(name, "skill", true, limit);
-            }
-        }
-
-        py06pd.LimitBreak.Window_ActorCommand_addSkillCommands.call(this);
-    };
-
 })(); // IIFE
+
+//=============================================================================
+// Game_Actor
+//=============================================================================
+
+Game_Actor.prototype.addedSkillTypes = function() {
+    const types = Game_BattlerBase.prototype.addedSkillTypes.call(this);
+    return types.filter(stypeId =>
+        (this.tp === this.maxTp() || !py06pd.LimitBreak.skillTypes.includes(stypeId)) &&
+        (this.tp !== this.maxTp() || !py06pd.LimitBreak.hideSkillTypes.includes(stypeId)));
+};

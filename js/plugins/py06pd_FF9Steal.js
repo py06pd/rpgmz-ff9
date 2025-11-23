@@ -14,7 +14,6 @@
 var py06pd = py06pd || {};
 py06pd.FF9Steal = py06pd.FF9Steal || {};
 py06pd.FF9Steal.stealSlotChance = [1,16,64,256];
-py06pd.FF9Steal.stealSkillId = 4;
 py06pd.FF9Steal.vocabCouldntSteal = "Couldn't steal anything.";
 py06pd.FF9Steal.vocabNothingToSteal = "Nothing to steal.";
 py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
@@ -22,24 +21,61 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
 (function() {
 
 //=============================================================================
+// DataManager
+//=============================================================================
+
+    py06pd.FF9Steal.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function() {
+        if (!py06pd.FF9Steal.DataManager_isDatabaseLoaded.call(this)) {
+            return false;
+        }
+        if (!py06pd.FF9Steal.DatabaseLoaded) {
+            $dataEnemies.forEach(item => {
+                if (item) {
+                    item.stealItems = py06pd.Utils.ReadJsonNote(item, 'steal', false);
+                }
+            });
+            $dataSkills.forEach(item => {
+                if (item && py06pd.Utils.ReadJsonNote(item, 'steal', false)) {
+                    item.effects.push({
+                        code: Game_Action.EFFECT_SPECIAL,
+                        dataId: Game_Action.SPECIAL_EFFECT_STEAL,
+                        value1: 0,
+                        value2: 0
+                    });
+                }
+            });
+
+            py06pd.FF9Steal.DatabaseLoaded = true;
+        }
+
+        return true;
+    };
+
+//=============================================================================
 // Game_Action
 //=============================================================================
 
-    py06pd.FF9Steal.Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
-    Game_Action.prototype.applyItemUserEffect = function(target) {
-        if (target.result().steal) {
-            this.makeSuccess(target);
-            if (target.result().stolen) {
-                $gameParty.gainItem(target.result().stolen, 1);
+    py06pd.FF9Steal.Game_Action_itemEffectSpecial = Game_Action.prototype.itemEffectSpecial;
+    Game_Action.prototype.itemEffectSpecial = function(target, effect) {
+        if (this.isStealSkill()) {
+            if (target.anyStealItems()) {
+                let slot = py06pd.FF9Steal.stealSlotChance.findIndex((chance) => Math.randomInt(256) < chance);
+                const stolen = target.stealItem(slot);
+                if (stolen) {
+                    target.result().stolen = stolen.name;
+                    $gameParty.gainItem(stolen, 1);
+                    this.makeSuccess(target);
+                }
             }
+        } else {
+            py06pd.FF9Eat.Game_Action_itemEffectSpecial.call(this, target, effect);
         }
-
-        py06pd.FF9Steal.Game_Action_applyItemUserEffect.call(this, target);
     };
 
     py06pd.FF9Steal.Game_Action_itemHit = Game_Action.prototype.itemHit;
     Game_Action.prototype.itemHit = function(target) {
-        if (target.result().steal) {
+        if (this.isStealSkill()) {
             if (!target.anyStealItems()) {
                 return 1;
             }
@@ -54,32 +90,11 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
 
     py06pd.FF9Steal.Game_Action_itemEva = Game_Action.prototype.itemEva;
     Game_Action.prototype.itemEva = function(target) {
-        if (target.result().steal) {
-            if (!target.anyStealItems()) {
-                target.result().stolen = null;
-                return 0;
-            }
-
-            let slot = py06pd.FF9Steal.stealSlotChance.findIndex((chance) => Math.randomInt(256) < chance);
-            const stolen = target.stealItem(slot);
-            if (stolen) {
-                target.result().stolen = stolen;
-                return 0;
-            }
-
-            return 1;
+        if (this.isStealSkill()) {
+            return 0;
         }
 
         return py06pd.FF9Steal.Game_Action_itemEva.call(this, target);
-    };
-
-    py06pd.FF9Steal.Game_Action_testApply = Game_Action.prototype.testApply;
-    Game_Action.prototype.testApply = function(target) {
-        if (this.isSkill() && this.item().id === py06pd.FF9Steal.stealSkillId) {
-            target.result().steal = true;
-            return true;
-        }
-        return py06pd.FF9Steal.Game_Action_testApply.call(this, target);
     };
 
 //=============================================================================
@@ -110,7 +125,7 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
     py06pd.FF9Steal.Game_Enemy_setup = Game_Enemy.prototype.setup;
     Game_Enemy.prototype.setup = function(enemyId, x, y) {
         py06pd.FF9Steal.Game_Enemy_setup.call(this, enemyId, x, y);
-        this._stealItems = JSON.parse(this.enemy().note).steal.map(slot => {
+        this._stealItems = this.enemy().stealItems.map(slot => {
             if (slot && slot[0] === "item") {
                 return $dataItems.find(item => item && item.name === slot[1]);
             }
@@ -172,19 +187,42 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
         if (target.result().steal) {
             if (target.result().missed) {
                 this.push("addText", py06pd.FF9Steal.vocabCouldntSteal);
-            } else if (target.result().evaded) {
-                this.push("addText", py06pd.FF9Steal.vocabCouldntSteal);
-            } else if (!target.result().stolen) {
-                this.push("addText", py06pd.FF9Steal.vocabNothingToSteal);
-            } else {
-                this.push("addText", py06pd.FF9Steal.vocabStoleItem.format(target.result().stolen.name));
+            } else if (target.result().success) {
+                this.push("addText", py06pd.FF9Steal.vocabStoleItem.format(target.result().stolen));
             }
         } else {
             py06pd.FF9Steal.Window_BattleLog_displayDamage.call(this, target);
         }
     };
 
+    py06pd.FF9Steal.Window_BattleLog_displayFailure = Window_BattleLog.prototype.displayFailure;
+    Window_BattleLog.prototype.displayFailure = function(target) {
+        if (target.result().steal) {
+            if (target.result().isHit() && !target.result().success) {
+                if (target.anyStealItems()) {
+                    this.push("addText", py06pd.FF9Steal.vocabCouldntSteal);
+                } else {
+                    this.push("addText", py06pd.FF9Steal.vocabNothingToSteal);
+                }
+            }
+        } else {
+            py06pd.FF9Steal.Window_BattleLog_displayFailure.call(this, target);
+        }
+    };
+
 })(); // IIFE
+
+//=============================================================================
+// Game_Action
+//=============================================================================
+
+Game_Action.SPECIAL_EFFECT_STEAL = 10;
+
+Game_Action.prototype.isStealSkill = function() {
+    return this.isSkill() && this.item().effects.some(effect =>
+        effect.code === Game_Action.EFFECT_SPECIAL &&
+        effect.dataId === Game_Action.SPECIAL_EFFECT_STEAL);
+};
 
 //=============================================================================
 // Game_Enemy
