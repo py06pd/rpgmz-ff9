@@ -161,7 +161,7 @@
   "magicSkills": [1],
   "menuCommands": [true, true, true, true, true, true],
   "optAutosave": true,
-  "optDisplayTp": false,
+  "optDisplayTp": true,
   "optDrawTitle": true,
   "optExtraExp": false,
   "optFloorDeath": false,
@@ -203,7 +203,7 @@
     "Lancer",
     "Blue Mage",
     "Brawler",
-    "",
+    "Dyne",
     "",
     "",
     ""
@@ -442,14 +442,14 @@
     "params": [
       "Max HP",
       "Max MP",
-      "Attack",
-      "Defense",
-      "M.Attack",
-      "M.Defense",
-      "Agility",
-      "Luck",
+      "Strength",
+      "Defence",
+      "Magic",
+      "Magic Def",
+      "Speed",
+      "Spirit",
       "Hit",
-      "Evasion"
+      "Evade"
     ],
     "messages": {
       "alwaysDash": "Always Dash",
