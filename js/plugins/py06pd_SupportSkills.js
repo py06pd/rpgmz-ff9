@@ -60,20 +60,6 @@ py06pd.SupportSkills.vocabSupport = "Support";
         this._supportSkills = [];
     };
 
-    py06pd.SupportSkills.Game_Actor_attackElements = Game_Actor.prototype.attackElements;
-    Game_Actor.prototype.attackElements = function() {
-        const set = py06pd.SupportSkills.Game_Actor_attackElements.call(this);
-        this._equippedSupportSkills.forEach(skillId => {
-            $dataStates[skillId].traits.forEach(trait => {
-                if (trait.code === Game_BattlerBase.TRAIT_ATTACK_ELEMENT) {
-                    set.push(trait.dataId);
-                }
-            })
-        });
-
-        return set;
-    };
-
 //=============================================================================
 // Scene_Skill
 //=============================================================================
@@ -212,6 +198,14 @@ Game_Actor.prototype.isLearnedSupportSkill = function(skillId) {
 
 Game_Actor.prototype.skillStones = function() {
     return $dataClasses[this._classId].skillStones;
+};
+
+Game_Actor.prototype.states = function() {
+    const states = Game_BattlerBase.prototype.states.call(this);
+    this._equippedSupportSkills.forEach(skillId => {
+        states.push($dataStates[skillId]);
+    });
+    return states;
 };
 
 Game_Actor.prototype.supportSkills = function() {
