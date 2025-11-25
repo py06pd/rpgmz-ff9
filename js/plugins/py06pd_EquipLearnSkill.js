@@ -443,13 +443,16 @@ Window_EquipLearn.prototype.paint = function() {
         this._gauges.forEach(sprite => sprite.hide());
         if (this._item) {
             (new Game_Item(this._item)).skills().forEach((skill, index) => {
+                const enabled = this.isEnabled(skill.item);
                 const rect = this.itemLineRect(index);
-                const sprite = this._gauges[index];
                 this.changePaintOpacity(this.isEnabled(skill.item));
-                this.drawItemName(skill.item, rect.x, rect.y, rect.width - sprite.bitmapWidth());
-                sprite.setup(this._actor, skill.type, skill.item.id);
-                sprite.move(rect.width - sprite.bitmapWidth(), rect.y);
-                sprite.show();
+                this.drawItemName(skill.item, rect.x, rect.y, rect.width - this._gauges[0].bitmapWidth());
+                if (enabled) {
+                    const sprite = this._gauges[index];
+                    sprite.setup(this._actor, skill.type, skill.item.id);
+                    sprite.move(rect.width - sprite.bitmapWidth(), rect.y);
+                    sprite.show();
+                }
                 this.changePaintOpacity(1);
             });
         }

@@ -18,6 +18,29 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
 (function() {
 
 //=============================================================================
+// DataManager
+//=============================================================================
+
+    py06pd.FF9BattleMechanics.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function() {
+        if (!py06pd.FF9BattleMechanics.DataManager_isDatabaseLoaded.call(this)) {
+            return false;
+        }
+        if (!py06pd.FF9BattleMechanics.DatabaseLoaded) {
+            $dataEnemies.forEach(item => {
+                if (item) {
+                    item.attack = py06pd.Utils.ReadJsonNote(item, 'attack', null);
+                    item.level = py06pd.Utils.ReadJsonNote(item, 'level', null);
+                }
+            });
+
+            py06pd.FF9BattleMechanics.DatabaseLoaded = true;
+        }
+
+        return true;
+    };
+
+//=============================================================================
 // Game_Action
 //=============================================================================
 
@@ -93,13 +116,6 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
 // Game_Battler
 //=============================================================================
 
-Object.defineProperty(Game_Battler.prototype, "level", {
-    get: function() {
-        return this._level;
-    },
-    configurable: true
-});
-
 Game_Battler.prototype.attackBonus1 = function() {
     return this.atk;
 };
@@ -163,10 +179,17 @@ Game_Actor.prototype.attackBonus2 = function() {
 // Game_Enemy
 //=============================================================================
 
+Object.defineProperty(Game_Enemy.prototype, "level", {
+    get: function() {
+        return this.enemy().level;
+    },
+    configurable: true
+});
+
 Game_Enemy.prototype.attackBonus2 = function() {
     return Math.random() * (((this.level + this.atk) / 4) + 1);
 };
 
 Game_Enemy.prototype.weaponAttack = function() {
-    return JSON.parse(this.enemy().note).attack;
+    return this.enemy().attack;
 };

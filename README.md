@@ -9,11 +9,14 @@ treating/testing them as discrete plugins.
 
 The order I have tested them in is:
 
+py06pd_Utils
 py06pd_SupportSkills
 py06pd_EquipLearnSkill
 py06pd_FF9BattleMechanics
 py06pd_FF9Steal
 py06pd_FF9Formation
+py06pd_LimitBreak
+py06pd_FF9Eat
 
 ## Progress
 
@@ -29,12 +32,13 @@ py06pd_FF9Formation
  * Equip support abilities
  * Learn skills from gear
  * Steal command
+ * Eat command
+ * Limit break  - FF7 or FF10 style limit breaks/overdrive rather than ff9 trance
 
 ## Todo (not comprehensive)
 
  * Support abilities
  * FF9 battle speed
- * Limit - FF7 or FF10 style limit breaks/overdrive rather than ff9 trance
  * Card game - FF8 Triple Triad; not Tetra Master
  * ? and ! interaction prompts
  * Fix status data effects
@@ -42,3 +46,6 @@ py06pd_FF9Formation
  * Fix skill effects
  * Fix weapon/armour effects
  * Fix item effects
+ * Damage display in above target rather than in battle log window
+ * Battle results screen
+ * Switch between target one & target multiple for magic commands

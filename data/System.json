@@ -139,7 +139,16 @@
     "Earth",
     "Wind",
     "Light",
-    "Darkness"
+    "Darkness",
+    "",
+    "Beast",
+    "Bird",
+    "Bug",
+    "Demon",
+    "Dragon",
+    "Humanoid",
+    "Stone",
+    "Undead"
   ],
   "equipTypes": [
     "",

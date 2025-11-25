@@ -69,7 +69,7 @@ py06pd.FF9Steal.vocabStoleItem = "Stole %1!";
                 }
             }
         } else {
-            py06pd.FF9Eat.Game_Action_itemEffectSpecial.call(this, target, effect);
+            py06pd.FF9Steal.Game_Action_itemEffectSpecial.call(this, target, effect);
         }
     };
 

@@ -20,6 +20,36 @@ py06pd.SupportSkills.vocabSupport = "Support";
 (function() {
 
 //=============================================================================
+// DataManager
+//=============================================================================
+
+    py06pd.SupportSkills.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function() {
+        if (!py06pd.SupportSkills.DataManager_isDatabaseLoaded.call(this)) {
+            return false;
+        }
+        if (!py06pd.SupportSkills.DatabaseLoaded) {
+            $dataClasses.forEach(item => {
+                if (item) {
+                    item.skillStones = py06pd.Utils.ReadJsonNote(item, 'skillStones', 0);
+                }
+            });
+            $dataStates.forEach(item => {
+                if (item) {
+                    item.fleeGil = py06pd.Utils.ReadJsonNote(item, 'fleeGil', false);
+                    item.killer = py06pd.Utils.ReadJsonNote(item, 'killer', null);
+                    item.millionaire = py06pd.Utils.ReadJsonNote(item, 'millionaire', false);
+                    item.skillStoneCost = py06pd.Utils.ReadJsonNote(item, 'slots', 0);
+                }
+            });
+
+            py06pd.SupportSkills.DatabaseLoaded = true;
+        }
+
+        return true;
+    };
+
+//=============================================================================
 // Game_Actor
 //=============================================================================
 
@@ -28,6 +58,20 @@ py06pd.SupportSkills.vocabSupport = "Support";
         py06pd.SupportSkills.Game_Actor_initMembers.call(this);
         this._equippedSupportSkills = [];
         this._supportSkills = [];
+    };
+
+    py06pd.SupportSkills.Game_Actor_attackElements = Game_Actor.prototype.attackElements;
+    Game_Actor.prototype.attackElements = function() {
+        const set = py06pd.SupportSkills.Game_Actor_attackElements.call(this);
+        this._equippedSupportSkills.forEach(skillId => {
+            $dataStates[skillId].traits.forEach(trait => {
+                if (trait.code === Game_BattlerBase.TRAIT_ATTACK_ELEMENT) {
+                    set.push(trait.dataId);
+                }
+            })
+        });
+
+        return set;
     };
 
 //=============================================================================
@@ -73,7 +117,7 @@ py06pd.SupportSkills.vocabSupport = "Support";
         }
 
         return item && (this._actor.isEquippedSupportSkill(item.id) ||
-            this._actor.freeSkillStones() >= JSON.parse(item.note).slots);
+            this._actor.freeSkillStones() >= item.skillStoneCost);
     };
 
     py06pd.SupportSkills.Window_SkillList_drawItem = Window_SkillList.prototype.drawItem;
@@ -95,7 +139,7 @@ py06pd.SupportSkills.vocabSupport = "Support";
                 this.resetTextColor();
                 this.drawIcon(iconIndex, rect.x, iconY);
                 this.drawText(skill.name, rect.x + textMargin, rect.y, itemWidth);
-                this.drawText(JSON.parse(skill.note).slots, rect.x, rect.y, rect.width, "right");
+                this.drawText(skill.skillStoneCost, rect.x, rect.y, rect.width, "right");
                 this.changePaintOpacity(1);
             }
         }
@@ -144,7 +188,11 @@ Game_Actor.prototype.equipSupportSkill = function(skillId) {
 
 Game_Actor.prototype.freeSkillStones = function() {
     return this.skillStones() -
-        this._equippedSupportSkills.reduce((prev, curr) => prev + JSON.parse($dataStates[curr].note).slots, 0);
+        this._equippedSupportSkills.reduce((prev, curr) => prev + $dataStates[curr].skillStoneCost, 0);
+};
+
+Game_Actor.prototype.hasSupportEffect = function(name) {
+    this._equippedSupportSkills.some(skillId => $dataStates[skillId][name]);
 };
 
 Game_Actor.prototype.learnSupportSkill = function(skillId) {
@@ -163,7 +211,7 @@ Game_Actor.prototype.isLearnedSupportSkill = function(skillId) {
 };
 
 Game_Actor.prototype.skillStones = function() {
-    return JSON.parse($dataClasses[this._classId].note).skillStones;
+    return $dataClasses[this._classId].skillStones;
 };
 
 Game_Actor.prototype.supportSkills = function() {
