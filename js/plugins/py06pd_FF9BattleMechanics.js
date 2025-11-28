@@ -109,6 +109,16 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
         return false;
     };
 
+    py06pd.FF9BattleMechanics.Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
+    Game_Action.prototype.makeDamageValue = function(target, critical) {
+        const value = py06pd.FF9BattleMechanics.Game_Action_makeDamageValue.call(this, target, critical);
+        if (this.isAttack() && value > 0 && this.subject().specialFlag(Game_BattlerBase.FLAG_ID_HEALER)) {
+            return -value;
+        }
+
+        return value;
+    };
+
 //=============================================================================
 // Game_Actor
 //=============================================================================
@@ -306,6 +316,7 @@ Game_Battler.prototype.weaponAttack = function() {
 Game_BattlerBase.FLAG_ID_ACCURACY_PLUS = 4;
 Game_BattlerBase.FLAG_ID_RETURN_MAGIC = 10;
 Game_BattlerBase.FLAG_ID_MAG_ELEM_NULL = 11;
+Game_BattlerBase.FLAG_ID_HEALER = 12;
 
 //=============================================================================
 // Game_Enemy
