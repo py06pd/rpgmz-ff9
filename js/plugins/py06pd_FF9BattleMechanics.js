@@ -51,8 +51,16 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
             this.invokeMagicReflection(subject, target);
         } else {
             this.invokeNormalAction(subject, target);
-            if (Math.random() < this._action.itemCnt(target)) {
-                this.invokeCounterAttack(subject, target);
+            if (target.isAlive()) {
+                if (Math.random() < this._action.itemCnt(target)) {
+                    this.invokeCounterAttack(subject, target);
+                }
+                if (
+                    this._action.isMagical() &&
+                    target.specialFlag(Game_BattlerBase.FLAG_ID_RETURN_MAGIC)
+                ) {
+                    this.invokeMagicCounter(subject, target);
+                }
             }
         }
         subject.setLastTarget(target);
@@ -205,6 +213,18 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
 })(); // IIFE
 
 //=============================================================================
+// BattleManager
+//=============================================================================
+
+BattleManager.invokeMagicCounter = function(subject, target) {
+    const action = new Game_Action(target);
+    action.setSkill(this._action.item().id);
+    action.apply(subject);
+    this._logWindow.displayCounter(target);
+    this._logWindow.displayActionResults(target, subject);
+};
+
+//=============================================================================
 // Game_Actor
 //=============================================================================
 
@@ -272,6 +292,7 @@ Game_Battler.prototype.weaponAttack = function() {
 //=============================================================================
 
 Game_BattlerBase.FLAG_ID_ACCURACY_PLUS = 4;
+Game_BattlerBase.FLAG_ID_RETURN_MAGIC = 10;
 
 //=============================================================================
 // Game_Enemy

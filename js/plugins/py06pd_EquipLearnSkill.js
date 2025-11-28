@@ -66,7 +66,10 @@ py06pd.EquipLearnSkill.vocabMagicEvasion = "Magic Eva";
         const skills = py06pd.EquipLearnSkill.Game_Actor_skills.call(this);
         this.equips().forEach(equip => {
             (new Game_Item(equip)).skills().filter((skill) => {
-                if (skill.type === "skill" && !this.isLearnedSkill(skill.item.id)) {
+                if (
+                    skill.type === "skill" && !this.isLearnedSkill(skill.item.id) &&
+                    !skills.includes(skill.item)
+                ) {
                     skills.push(skill.item);
                 }
             });
