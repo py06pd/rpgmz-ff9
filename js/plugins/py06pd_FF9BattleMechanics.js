@@ -71,6 +71,18 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
 // Game_Action
 //=============================================================================
 
+    py06pd.FF9BattleMechanics.Game_Action_calcElementRate = Game_Action.prototype.calcElementRate;
+    Game_Action.prototype.calcElementRate = function(target) {
+        if (
+            this.isMagical() &&
+            this.subject().specialFlag(Game_BattlerBase.FLAG_ID_MAG_ELEM_NULL)
+        ) {
+            return 1;
+        }
+
+        return py06pd.FF9BattleMechanics.Game_Action_calcElementRate.call(this, target);
+    };
+
     py06pd.FF9BattleMechanics.Game_Action_itemHit = Game_Action.prototype.itemHit;
     Game_Action.prototype.itemHit = function(target) {
         if (this.isMagical() && this.item().damage.type === 0) {
@@ -82,7 +94,7 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
         }
 
         return py06pd.FF9BattleMechanics.Game_Action_itemHit.call(this, target);
-    }
+    };
 
     py06pd.FF9BattleMechanics.Game_Action_isCertainHit = Game_Action.prototype.isCertainHit;
     Game_Action.prototype.isCertainHit = function() {
@@ -95,7 +107,7 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
         }
 
         return false;
-    }
+    };
 
 //=============================================================================
 // Game_Actor
@@ -293,6 +305,7 @@ Game_Battler.prototype.weaponAttack = function() {
 
 Game_BattlerBase.FLAG_ID_ACCURACY_PLUS = 4;
 Game_BattlerBase.FLAG_ID_RETURN_MAGIC = 10;
+Game_BattlerBase.FLAG_ID_MAG_ELEM_NULL = 11;
 
 //=============================================================================
 // Game_Enemy
