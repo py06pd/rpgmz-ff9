@@ -41,6 +41,25 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
     };
 
 //=============================================================================
+// BattleManager
+//=============================================================================
+
+    py06pd.FF9BattleMechanics.BattleManager_invokeAction = BattleManager.invokeAction;
+    BattleManager.invokeAction = function(subject, target) {
+        this._logWindow.push("pushBaseLine");
+        if (Math.random() < this._action.itemMrf(target)) {
+            this.invokeMagicReflection(subject, target);
+        } else {
+            this.invokeNormalAction(subject, target);
+            if (Math.random() < this._action.itemCnt(target)) {
+                this.invokeCounterAttack(subject, target);
+            }
+        }
+        subject.setLastTarget(target);
+        this._logWindow.push("popBaseLine");
+    };
+
+//=============================================================================
 // Game_Action
 //=============================================================================
 
@@ -107,6 +126,18 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
         }
 
         return val;
+    };
+
+    py06pd.FF9BattleMechanics.Game_BattlerBase_xparam = Game_BattlerBase.prototype.xparam;
+    Game_BattlerBase.prototype.xparam = function(xparamId) {
+        const value = py06pd.FF9BattleMechanics.Game_BattlerBase_xparam.call(this, xparamId);
+
+        // counter rate
+        if (xparamId ===  6) {
+            return this.luk * value / 50;
+        }
+
+        return value;
     };
 
 //=============================================================================
