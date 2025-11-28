@@ -50,7 +50,24 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
             return (this.item().successRate + this.subject().level + (this.subject().mat / 4) - target.level) * 0.01;
         }
 
+        if (this.isCertainHit()) {
+            return 1;
+        }
+
         return py06pd.FF9BattleMechanics.Game_Action_itemHit.call(this, target);
+    }
+
+    py06pd.FF9BattleMechanics.Game_Action_isCertainHit = Game_Action.prototype.isCertainHit;
+    Game_Action.prototype.isCertainHit = function() {
+        const certain = py06pd.FF9BattleMechanics.Game_Action_isCertainHit.call(this);
+        if (
+            certain ||
+            (this.isPhysical() && this.subject().specialFlag(Game_BattlerBase.FLAG_ID_ACCURACY_PLUS))
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
 //=============================================================================
@@ -72,11 +89,24 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
 
     py06pd.FF9BattleMechanics.Game_BattlerBase_paramMax = Game_BattlerBase.prototype.paramMax;
     Game_BattlerBase.prototype.paramMax = function(paramId) {
-        if (paramId === 6) {
+        if (paramId === 2 || paramId === 4) {
+            return 99;
+        }
+        if (paramId === 6 || paramId === 7) {
             return 50;
         }
 
         return py06pd.FF9BattleMechanics.Game_BattlerBase_paramMax.call(this, paramId);
+    };
+
+    py06pd.FF9BattleMechanics.Game_BattlerBase_sparam = Game_BattlerBase.prototype.sparam;
+    Game_BattlerBase.prototype.sparam = function(sparamId) {
+        const val = py06pd.FF9BattleMechanics.Game_BattlerBase_sparam.call(this, sparamId);
+        if (sparamId === 3 && $gameParty.inBattle()) {
+            return val * 1.5;
+        }
+
+        return val;
     };
 
 //=============================================================================
@@ -92,6 +122,37 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
     py06pd.FF9BattleMechanics.Game_Battler_tpbSpeed = Game_Battler.prototype.tpbSpeed;
     Game_Battler.prototype.tpbSpeed = function() {
         return this.tpbChargeRate() / (60 - this.agi);
+    };
+
+//=============================================================================
+// Game_Party
+//=============================================================================
+
+    py06pd.FF9BattleMechanics.Game_Party_ratePreemptive = Game_Party.prototype.ratePreemptive;
+    Game_Party.prototype.ratePreemptive = function(troopAgi) {
+        let rate = 0.0625;
+        if (this.hasRaisePreemptive()) {
+            rate = 0.33;
+        }
+        return rate;
+    };
+
+    py06pd.FF9BattleMechanics.Game_Party_rateSurprise = Game_Party.prototype.rateSurprise;
+    Game_Party.prototype.rateSurprise = function(troopAgi) {
+        let rate = 24 / 256;
+        if (this.hasCancelSurprise()) {
+            rate = 0;
+        }
+        return rate;
+    };
+
+//=============================================================================
+// Game_Troop
+//=============================================================================
+
+    py06pd.FF9BattleMechanics.Game_Troop_goldRate = Game_Troop.prototype.goldRate;
+    Game_Troop.prototype.goldRate = function() {
+        return $gameParty.hasGoldDouble() ? 1.5 : 1;
     };
 
 //=============================================================================
@@ -111,32 +172,6 @@ py06pd.FF9BattleMechanics.BattleSpeed = 1;
     };
 
 })(); // IIFE
-
-//=============================================================================
-// Game_Battler
-//=============================================================================
-
-Game_Battler.prototype.attackBonus1 = function() {
-    return this.atk;
-};
-
-Game_Battler.prototype.magicBonus = function() {
-    return this.mat + (Math.random() * (((this.level + this.mat) / 8) + 1));
-};
-
-Game_Battler.prototype.tpbChargeRate = function() {
-    if (false) {// haste
-        return 1.5;
-    }
-    if (false) {// slow
-        return 0.625;
-    }
-    return 1;
-};
-
-Game_Battler.prototype.weaponAttack = function() {
-    return 1;
-};
 
 //=============================================================================
 // Game_Actor
@@ -174,6 +209,38 @@ Game_Actor.prototype.attackBonus1 = function() {
 Game_Actor.prototype.attackBonus2 = function() {
     return Math.random() * (((this.level + this.atk) / 8) + 1);
 };
+
+//=============================================================================
+// Game_Battler
+//=============================================================================
+
+Game_Battler.prototype.attackBonus1 = function() {
+    return this.atk;
+};
+
+Game_Battler.prototype.magicBonus = function() {
+    return this.mat + (Math.random() * (((this.level + this.mat) / 8) + 1));
+};
+
+Game_Battler.prototype.tpbChargeRate = function() {
+    if (false) {// haste
+        return 1.5;
+    }
+    if (false) {// slow
+        return 0.625;
+    }
+    return 1;
+};
+
+Game_Battler.prototype.weaponAttack = function() {
+    return 1;
+};
+
+//=============================================================================
+// Game_BattlerBase
+//=============================================================================
+
+Game_BattlerBase.FLAG_ID_ACCURACY_PLUS = 4;
 
 //=============================================================================
 // Game_Enemy

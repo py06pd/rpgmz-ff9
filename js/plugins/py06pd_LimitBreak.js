@@ -52,7 +52,12 @@ py06pd.LimitBreak.hideSkillTypes = [null, null, null, null, null, null, 16, null
 
         if (target.result().hpAffected) {
             if (target.result().hpDamage > 0) {
-                target.gainSilentTp(Math.randomInt(target.luk));
+                let tp = Math.randomInt(target.luk);
+                if (target.specialFlag(Game_BattlerBase.FLAG_ID_HIGH_TIDE)) {
+                    tp = target.luk;
+                }
+
+                target.gainSilentTp(tp);
             }
         }
 
@@ -95,3 +100,9 @@ Game_Actor.prototype.addedSkillTypes = function() {
         (this.tp === this.maxTp() || !py06pd.LimitBreak.skillTypes.includes(stypeId)) &&
         (this.tp !== this.maxTp() || !py06pd.LimitBreak.hideSkillTypes.includes(stypeId)));
 };
+
+//=============================================================================
+// Game_BattlerBase
+//=============================================================================
+
+Game_BattlerBase.FLAG_ID_HIGH_TIDE = 5;

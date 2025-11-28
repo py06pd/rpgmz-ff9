@@ -25,10 +25,11 @@ py06pd.FF9Formation.vocabChange = "Change";
     Game_Action.prototype.evalDamageFormula = function(target) {
         let val = py06pd.FF9Formation.Game_Action_evalDamageFormula.call(this, target);
         if (this.isPhysical()) {
-            if (!this.subject().frontRow()) {
+            const longRange = this.subject().specialFlag(Game_BattlerBase.FLAG_ID_LONG_RANGE);
+            if (!this.subject().frontRow() && !longRange) {
                 val = val / 2;
             }
-            if (!target.frontRow()) {
+            if (!target.frontRow() && !longRange) {
                 val = val / 2;
             }
         }
@@ -158,6 +159,12 @@ Game_Battler.prototype.frontRow = function() {
 Game_Battler.prototype.switchRow = function() {
     this._frontRow = !this._frontRow;
 };
+
+//=============================================================================
+// Game_BattlerBase
+//=============================================================================
+
+Game_BattlerBase.FLAG_ID_LONG_RANGE = 6;
 
 //=============================================================================
 // Scene_Battle

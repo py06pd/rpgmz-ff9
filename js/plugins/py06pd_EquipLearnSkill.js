@@ -13,6 +13,7 @@
 
 var py06pd = py06pd || {};
 py06pd.EquipLearnSkill = py06pd.EquipLearnSkill || {};
+py06pd.EquipLearnSkill.apRateSParamId = 10;
 py06pd.EquipLearnSkill.vocabAttack = "Attack";
 py06pd.EquipLearnSkill.vocabMagicEvasion = "Magic Eva";
 
@@ -239,6 +240,20 @@ BattleManager.gainAp = function() {
 };
 
 //=============================================================================
+// Game_BattlerBase
+//=============================================================================
+
+Object.defineProperties(Game_BattlerBase.prototype, {
+    // Ability points rate
+    apr: {
+        get: function() {
+            return this.sparam(py06pd.EquipLearnSkill.apRateSParamId);
+        },
+        configurable: true
+    }
+});
+
+//=============================================================================
 // Game_Actor
 //=============================================================================
 
@@ -251,6 +266,7 @@ Game_Actor.prototype.canLearn = function(item) {
 };
 
 Game_Actor.prototype.gainAp = function(ap) {
+    const finalAp = Math.round(ap * this.apr);
     this.equips().forEach(equip => {
         (new Game_Item(equip)).skills().forEach((item) => {
            let maxAp = JSON.parse(item.item.note).ap;
@@ -262,7 +278,7 @@ Game_Actor.prototype.gainAp = function(ap) {
                current = { type: item.type, id: item.item.id, value: 0 };
                this._learningSkills.push(current);
            }
-           current.value = Math.min(current.value + ap, maxAp);
+           current.value = Math.min(current.value + finalAp, maxAp);
            if (current.value >= maxAp) {
                if (item.type === "skill") {
                    this.learnSkill(item.item.id);

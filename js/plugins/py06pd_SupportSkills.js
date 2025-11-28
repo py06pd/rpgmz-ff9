@@ -37,9 +37,12 @@ py06pd.SupportSkills.vocabSupport = "Support";
             $dataStates.forEach(item => {
                 if (item) {
                     item.fleeGil = py06pd.Utils.ReadJsonNote(item, 'fleeGil', false);
-                    item.killer = py06pd.Utils.ReadJsonNote(item, 'killer', null);
                     item.millionaire = py06pd.Utils.ReadJsonNote(item, 'millionaire', false);
                     item.skillStoneCost = py06pd.Utils.ReadJsonNote(item, 'slots', 0);
+                    const traits = py06pd.Utils.ReadJsonNote(item, 'traits', []);
+                    traits.forEach(trait => {
+                        item.traits.push(trait);
+                    });
                 }
             });
 
@@ -167,6 +170,10 @@ py06pd.SupportSkills.vocabSupport = "Support";
     };
 
 })(); // IIFE
+
+//=============================================================================
+// Game_Actor
+//=============================================================================
 
 Game_Actor.prototype.equipSupportSkill = function(skillId) {
     this._equippedSupportSkills.push(skillId);
